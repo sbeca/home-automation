@@ -31,4 +31,4 @@ if [ -f "${DB_FILE}-wal" ]; then
 fi
 
 # Build Docker container
-docker build -t airgradientdataserver .
+docker build -t scottbeca/airgradientdataserver .
