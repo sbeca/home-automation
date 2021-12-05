@@ -37,22 +37,24 @@ AirGradient ag = AirGradient();
 
 SSD1306Wire display(0x3c, SDA, SCL);
 
+boolean flipDisplay=false;
+
 // set sensors that you do not use to false
 boolean hasPM=true;
 boolean hasCO2=true;
 boolean hasSHT=true;
 
 // set to true if you want to connect to wifi. The display will show values only when the sensor has wifi connection
-boolean connectWIFI=false;
+boolean connectWIFI=true;
 
 // change if you want to send the data to another server
-String APIROOT = "";
+String APIROOT = "http://192.168.1.129:5000/";
 
 void setup(){
   Serial.begin(9600);
 
   display.init();
-  display.flipScreenVertically();
+  if (flipDisplay) display.flipScreenVertically();
   showTextRectangle("Init", String(ESP.getChipId(),HEX),true);
 
   if (hasPM) ag.PMS_Init();
@@ -67,11 +69,11 @@ void loop(){
 
   // create payload
 
-  String payload = "{\"wifi\":" + String(WiFi.RSSI()) + ",";
+  String payload = "{\"DeviceId\":\"" + String(ESP.getChipId(),HEX) + "\",\"WifiStrength\":" + String(WiFi.RSSI()) + ",";
 
   if (hasPM) {
     int PM2 = ag.getPM2_Raw();
-    payload=payload+"\"pm02\":" + String(PM2);
+    payload=payload+"\"PM25\":" + String(PM2);
     showTextRectangle("PM2",String(PM2),false);
     delay(3000);
   }
@@ -79,7 +81,7 @@ void loop(){
   if (hasCO2) {
     if (hasPM) payload=payload+",";
     int CO2 = ag.getCO2_Raw();
-    payload=payload+"\"rco2\":" + String(CO2);
+    payload=payload+"\"CO2\":" + String(CO2);
     showTextRectangle("CO2",String(CO2),false);
     delay(3000);
   }
@@ -87,7 +89,7 @@ void loop(){
   if (hasSHT) {
     if (hasCO2 || hasPM) payload=payload+",";
     TMP_RH result = ag.periodicFetchData();
-    payload=payload+"\"atmp\":" + String(result.t) +   ",\"rhum\":" + String(result.rh);
+    payload=payload+"\"Temperature\":" + String(result.t) +   ",\"Humidity\":" + String(result.rh);
     showTextRectangle(String(result.t),String(result.rh)+"%",false);
     delay(3000);
   }
@@ -97,7 +99,7 @@ void loop(){
   // send payload
   if (connectWIFI){
     Serial.println(payload);
-    String POSTURL = APIROOT + "sensors/airgradient:" + String(ESP.getChipId(),HEX) + "/measures";
+    String POSTURL = APIROOT + "api/Measurements";
     Serial.println(POSTURL);
     WiFiClient client;
     HTTPClient http;
@@ -120,8 +122,13 @@ void showTextRectangle(String ln1, String ln2, boolean small) {
   } else {
     display.setFont(ArialMT_Plain_24);
   }
-  display.drawString(32, 16, ln1);
-  display.drawString(32, 36, ln2);
+  if (flipDisplay) {
+    display.drawString(32, 16, ln1);
+    display.drawString(32, 36, ln2);
+  } else {
+    display.drawString(32, 0, ln1);
+    display.drawString(32, 20, ln2);
+  }
   display.display();
 }
 
