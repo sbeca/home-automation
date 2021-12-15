@@ -16,7 +16,7 @@ ENV PATH $PATH:/root/.dotnet/tools
 RUN dotnet ef database update
 
 # Build runtime image
-FROM mcr.microsoft.com/dotnet/aspnet:6.0
+FROM mcr.microsoft.com/dotnet/aspnet:6.0 AS runtime-env
 WORKDIR /app
 
 COPY --from=build-env /app/out .
