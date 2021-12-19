@@ -37,67 +37,78 @@ AirGradient ag = AirGradient();
 
 SSD1306Wire display(0x3c, SDA, SCL);
 
-boolean flipDisplay=false;
+boolean flipDisplay = false;
 
 // set sensors that you do not use to false
-boolean hasPM=true;
-boolean hasCO2=true;
-boolean hasSHT=true;
+boolean hasPM = true;
+boolean hasCO2 = true;
+boolean hasSHT = true;
 
 // set to true if you want to connect to wifi. The display will show values only when the sensor has wifi connection
-boolean connectWIFI=true;
+boolean connectWIFI = true;
 
 // change if you want to send the data to another server
 String APIROOT = "http://192.168.1.129:5000/";
 
-void setup(){
+void setup()
+{
   Serial.begin(9600);
 
   display.init();
-  if (flipDisplay) display.flipScreenVertically();
-  showTextRectangle("Init", String(ESP.getChipId(),HEX),true);
+  if (flipDisplay)
+    display.flipScreenVertically();
+  showTextRectangle("Init", String(ESP.getChipId(), HEX), true);
 
-  if (hasPM) ag.PMS_Init();
-  if (hasCO2) ag.CO2_Init();
-  if (hasSHT) ag.TMP_RH_Init(0x44);
+  if (hasPM)
+    ag.PMS_Init();
+  if (hasCO2)
+    ag.CO2_Init();
+  if (hasSHT)
+    ag.TMP_RH_Init(0x44);
 
-  if (connectWIFI) connectToWifi();
+  if (connectWIFI)
+    connectToWifi();
   delay(2000);
 }
 
-void loop(){
-
+void loop()
+{
   // create payload
+  String payload = "{\"DeviceId\":\"" + String(ESP.getChipId(), HEX) + "\",\"WifiStrength\":" + String(WiFi.RSSI()) + ",";
 
-  String payload = "{\"DeviceId\":\"" + String(ESP.getChipId(),HEX) + "\",\"WifiStrength\":" + String(WiFi.RSSI()) + ",";
-
-  if (hasPM) {
+  if (hasPM)
+  {
     int PM2 = ag.getPM2_Raw();
-    payload=payload+"\"PM25\":" + String(PM2);
-    showTextRectangle("PM2",String(PM2),false);
+    payload = payload + "\"PM25\":" + String(PM2);
+    showTextRectangle("PM2", String(PM2), false);
     delay(3000);
   }
 
-  if (hasCO2) {
-    if (hasPM) payload=payload+",";
+  if (hasCO2)
+  {
+    if (hasPM)
+      payload = payload + ",";
     int CO2 = ag.getCO2_Raw();
-    payload=payload+"\"CO2\":" + String(CO2);
-    showTextRectangle("CO2",String(CO2),false);
+    payload = payload + "\"CO2\":" + String(CO2);
+    showTextRectangle("CO2", String(CO2), false);
     delay(3000);
   }
 
-  if (hasSHT) {
-    if (hasCO2 || hasPM) payload=payload+",";
+  if (hasSHT)
+  {
+    if (hasCO2 || hasPM)
+      payload = payload + ",";
     TMP_RH result = ag.periodicFetchData();
-    payload=payload+"\"Temperature\":" + String(result.t) +   ",\"Humidity\":" + String(result.rh);
-    showTextRectangle(String(result.t),String(result.rh)+"%",false);
+    payload = payload + "\"Temperature\":" + String(result.t) + ",\"Humidity\":" + String(result.rh);
+    showTextRectangle(String(result.t), String(result.rh) + "%", false);
     delay(3000);
   }
 
-   payload=payload+"}";
+  payload = payload + "}";
 
   // send payload
-  if (connectWIFI){
+  if (connectWIFI)
+  {
     Serial.println(payload);
     String POSTURL = APIROOT + "api/Measurements";
     Serial.println(POSTURL);
@@ -114,18 +125,25 @@ void loop(){
 }
 
 // DISPLAY
-void showTextRectangle(String ln1, String ln2, boolean small) {
+void showTextRectangle(String ln1, String ln2, boolean small)
+{
   display.clear();
   display.setTextAlignment(TEXT_ALIGN_LEFT);
-  if (small) {
+  if (small)
+  {
     display.setFont(ArialMT_Plain_16);
-  } else {
+  }
+  else
+  {
     display.setFont(ArialMT_Plain_24);
   }
-  if (flipDisplay) {
+  if (flipDisplay)
+  {
     display.drawString(32, 16, ln1);
     display.drawString(32, 36, ln2);
-  } else {
+  }
+  else
+  {
     display.drawString(32, 0, ln1);
     display.drawString(32, 20, ln2);
   }
@@ -133,15 +151,17 @@ void showTextRectangle(String ln1, String ln2, boolean small) {
 }
 
 // Wifi Manager
-void connectToWifi(){
+void connectToWifi()
+{
   WiFiManager wifiManager;
   //WiFi.disconnect(); //to delete previous saved hotspot
-  String HOTSPOT = "AIRGRADIENT-"+String(ESP.getChipId(),HEX);
+  String HOTSPOT = "AIRGRADIENT-" + String(ESP.getChipId(), HEX);
   wifiManager.setTimeout(120);
-  if(!wifiManager.autoConnect((const char*)HOTSPOT.c_str())) {
-      Serial.println("failed to connect and hit timeout");
-      delay(3000);
-      ESP.restart();
-      delay(5000);
+  if (!wifiManager.autoConnect((const char *)HOTSPOT.c_str()))
+  {
+    Serial.println("failed to connect and hit timeout");
+    delay(3000);
+    ESP.restart();
+    delay(5000);
   }
 }
