@@ -48,7 +48,7 @@ boolean hasSHT = true;
 boolean connectWIFI = true;
 
 // change if you want to send the data to another server
-String APIROOT = "http://192.168.1.129:5000/";
+String APIROOT = "http://192.168.1.7:30500/";
 
 void setup()
 {
