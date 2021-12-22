@@ -27,9 +27,21 @@ kubectl apply -f ./kube-state-metrics
 # Deploy Prometheus (for monitoring)
 kubectl apply -f ./prometheus.yml
 
-# Deploy Prometheus Alert Manager (for sending alerts when things go wrong)
+# Deploy Prometheus Alertmanager (for sending alerts when things go wrong)
 kubectl apply -f ./alertmanager.yml
 
 # Deploy Grafana (for data metric graphing)
 kubectl apply -f ./grafana.yml
 ```
+
+Once you've deployed all the above, you'll be able to access:
+
+* [Prometheus](https://prometheus.io) via port 30000 of the Kubernetes node's IP address, e.g. [http://192.168.1.7:30000](http://192.168.1.7:30000)
+* [Alertmanager](https://prometheus.io/docs/alerting/latest/alertmanager/) via port 31000 of the Kubernetes node's IP address, e.g. [http://192.168.1.7:31000](http://192.168.1.7:31000)
+* [Grafana](https://grafana.com) via port 32000 of the Kubernetes node's IP address, e.g. [http://192.168.1.7:32000](http://192.168.1.7:32000)
+
+When you log into Grafana for the first time, you'll need to log in with `admin` as both the username and password. It will then prompt you to set a new password for the `admin` user.
+
+You'll then need to set up any Grafana dashboards you want to be able to view useful data.
+
+The first dashboard that is worth importing is the [Node Exporter Full](https://grafana.com/grafana/dashboards/1860) dashboard, which gets you a bunch of hardware info about the computer running Kubernetes.
