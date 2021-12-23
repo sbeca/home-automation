@@ -50,6 +50,10 @@ boolean connectWIFI = true;
 // change if you want to send the data to another server
 String APIROOT = "http://192.168.1.7:30500/";
 
+// if you want to spread out how often data is sent to the server, set this value. FYI, every loop takes a bit over 9 secs
+int loopCountBetweenDataPosts = 6;
+int currentLoopCount = 0;
+
 void setup()
 {
   Serial.begin(9600);
@@ -107,7 +111,7 @@ void loop()
   payload = payload + "}";
 
   // send payload
-  if (connectWIFI)
+  if (connectWIFI && currentLoopCount == 0)
   {
     Serial.println(payload);
     String POSTURL = APIROOT + "api/Measurements";
@@ -122,6 +126,10 @@ void loop()
     Serial.println(response);
     http.end();
   }
+
+  currentLoopCount++;
+  if (currentLoopCount >= loopCountBetweenDataPosts)
+    currentLoopCount = 0;
 }
 
 // DISPLAY
