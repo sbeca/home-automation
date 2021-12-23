@@ -36,6 +36,7 @@ kubectl apply -f ./grafana.yml
 
 Once you've deployed all the above, you'll be able to access:
 
+* AirGradientDataServer via port 30500 of the Kubernetes node's IP address, e.g. [http://192.168.1.7:30500/api/measurements](http://192.168.1.7:30500/api/measurements)
 * [Prometheus](https://prometheus.io) via port 30000 of the Kubernetes node's IP address, e.g. [http://192.168.1.7:30000](http://192.168.1.7:30000)
 * [Alertmanager](https://prometheus.io/docs/alerting/latest/alertmanager/) via port 31000 of the Kubernetes node's IP address, e.g. [http://192.168.1.7:31000](http://192.168.1.7:31000)
 * [Grafana](https://grafana.com) via port 32000 of the Kubernetes node's IP address, e.g. [http://192.168.1.7:32000](http://192.168.1.7:32000)
