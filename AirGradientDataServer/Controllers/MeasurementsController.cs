@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -22,9 +23,80 @@ namespace AirGradientDataServer.Controllers
 
         // GET: api/Measurements
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Measurement>>> GetMeasurements()
+        public async Task<ActionResult<IEnumerable<Measurement>>> GetMeasurements(string? order)
         {
-            return await _context.Measurements.ToListAsync();
+            var measurements = _context.Measurements;
+            order = order?.ToLower();
+
+            IOrderedQueryable<Measurement> orderedMeasurements;
+            if (string.IsNullOrEmpty(order) || order == "desc")
+            {
+                // Default is descending
+                orderedMeasurements = measurements.OrderByDescending(e => e.MeasurementTime);
+            }
+            else if (order == "asc")
+            {
+                orderedMeasurements = measurements.OrderBy(e => e.MeasurementTime);
+            }
+            else
+            {
+                return BadRequest();
+            }
+
+            return await orderedMeasurements.ToListAsync();
+        }
+
+        // GET: api/Measurements/prometheus
+        [HttpGet("prometheus")]
+        [Produces("text/plain")]
+        public async Task<ActionResult<string>> GetPrometheusData()
+        {
+            // For Prometheus we just want the latest measure for each device
+            var measurementsForPrometheus = await _context.Measurements
+                .GroupBy(measurement => measurement.DeviceId)
+                .Select(measurementGroup => measurementGroup.OrderByDescending(measurement => measurement.MeasurementTime).FirstOrDefault())
+                .ToListAsync();
+
+            if (measurementsForPrometheus == null || measurementsForPrometheus.Count == 0)
+            {
+                return "";
+            }
+
+            StringBuilder sb = new StringBuilder();
+
+            sb.AppendLine("# HELP airgradient_pm02 Particulate Matter PM2.5 value");
+            sb.AppendLine("# TYPE airgradient_pm02 gauge");
+            foreach (var measurement in measurementsForPrometheus)
+            {
+                if (measurement == null) continue;
+                sb.AppendFormat("airgradient_pm02{{id=\"{0}\"}}{1}", measurement.DeviceId, measurement.PM25).AppendLine();
+            }
+
+            sb.AppendLine("# HELP airgradient_rco2 CO2 value, in ppm");
+            sb.AppendLine("# TYPE airgradient_rco2 gauge");
+            foreach (var measurement in measurementsForPrometheus)
+            {
+                if (measurement == null) continue;
+                sb.AppendFormat("airgradient_rco2{{id=\"{0}\"}}{1}", measurement.DeviceId, measurement.CO2).AppendLine();
+            }
+
+            sb.AppendLine("# HELP airgradient_atmp Temperature, in degrees Celsius");
+            sb.AppendLine("# TYPE airgradient_atmp gauge");
+            foreach (var measurement in measurementsForPrometheus)
+            {
+                if (measurement == null) continue;
+                sb.AppendFormat("airgradient_atmp{{id=\"{0}\"}}{1}", measurement.DeviceId, measurement.Temperature).AppendLine();
+            }
+
+            sb.AppendLine("# HELP airgradient_rhum Relative humidity, in percent");
+            sb.AppendLine("# TYPE airgradient_rhum gauge");
+            foreach (var measurement in measurementsForPrometheus)
+            {
+                if (measurement == null) continue;
+                sb.AppendFormat("airgradient_rhum{{id=\"{0}\"}}{1}", measurement.DeviceId, measurement.Humidity).AppendLine();
+            }
+
+            return sb.ToString();
         }
 
         // GET: api/Measurements/5
