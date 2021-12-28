@@ -83,7 +83,11 @@ void loop()
   if (hasPM)
   {
     int PM2 = ag.getPM2_Raw();
-    payload = payload + "\"PM25\":" + String(PM2);
+    if (PM2 < 0)
+      payload = payload + "\"PM25\":null";
+    else
+      payload = payload + "\"PM25\":" + String(PM2);
+
     showTextRectangle("PM2", String(PM2), false);
     delay(3000);
   }
@@ -92,8 +96,13 @@ void loop()
   {
     if (hasPM)
       payload = payload + ",";
+
     int CO2 = ag.getCO2_Raw();
-    payload = payload + "\"CO2\":" + String(CO2);
+    if (CO2 < 0)
+      payload = payload + "\"CO2\":null";
+    else
+      payload = payload + "\"CO2\":" + String(CO2);
+
     showTextRectangle("CO2", String(CO2), false);
     delay(3000);
   }
@@ -102,8 +111,13 @@ void loop()
   {
     if (hasCO2 || hasPM)
       payload = payload + ",";
+
     TMP_RH result = ag.periodicFetchData();
-    payload = payload + "\"Temperature\":" + String(result.t) + ",\"Humidity\":" + String(result.rh);
+    if (result.rh < 0)
+      payload = payload + "\"Temperature\":" + String(result.t) + ",\"Humidity\":null";
+    else
+      payload = payload + "\"Temperature\":" + String(result.t) + ",\"Humidity\":" + String(result.rh);
+
     showTextRectangle(String(result.t), String(result.rh) + "%", false);
     delay(3000);
   }

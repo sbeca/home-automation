@@ -16,6 +16,8 @@ namespace AirGradientDataServer.Controllers
     {
         private readonly MeasurementContext _context;
 
+        private static readonly TimeSpan missingTimeMaxForPrometheus = TimeSpan.FromMinutes(5);
+
         public MeasurementsController(MeasurementContext context)
         {
             _context = context;
@@ -62,13 +64,22 @@ namespace AirGradientDataServer.Controllers
                 return "";
             }
 
+            // Check that we're not missing too much data for specific sensors
+            for (int i = measurementsForPrometheus.Count - 1; i >= 0; i--)
+            {
+                if (measurementsForPrometheus[i] == null || (DateTime.UtcNow - measurementsForPrometheus[i]!.MeasurementTime) >= missingTimeMaxForPrometheus)
+                {
+                    measurementsForPrometheus.RemoveAt(i);
+                }
+            }
+
             StringBuilder sb = new StringBuilder();
 
             sb.AppendLine("# HELP airgradient_pm02 Particulate Matter PM2.5 value");
             sb.AppendLine("# TYPE airgradient_pm02 gauge");
             foreach (var measurement in measurementsForPrometheus)
             {
-                if (measurement == null) continue;
+                if (measurement?.PM25 == null) continue;
                 sb.AppendFormat("airgradient_pm02{{id=\"{0}\"}}{1}", measurement.DeviceId, measurement.PM25).AppendLine();
             }
 
@@ -76,7 +87,7 @@ namespace AirGradientDataServer.Controllers
             sb.AppendLine("# TYPE airgradient_rco2 gauge");
             foreach (var measurement in measurementsForPrometheus)
             {
-                if (measurement == null) continue;
+                if (measurement?.CO2 == null) continue;
                 sb.AppendFormat("airgradient_rco2{{id=\"{0}\"}}{1}", measurement.DeviceId, measurement.CO2).AppendLine();
             }
 
@@ -84,7 +95,7 @@ namespace AirGradientDataServer.Controllers
             sb.AppendLine("# TYPE airgradient_atmp gauge");
             foreach (var measurement in measurementsForPrometheus)
             {
-                if (measurement == null) continue;
+                if (measurement?.Temperature == null) continue;
                 sb.AppendFormat("airgradient_atmp{{id=\"{0}\"}}{1}", measurement.DeviceId, measurement.Temperature).AppendLine();
             }
 
@@ -92,7 +103,7 @@ namespace AirGradientDataServer.Controllers
             sb.AppendLine("# TYPE airgradient_rhum gauge");
             foreach (var measurement in measurementsForPrometheus)
             {
-                if (measurement == null) continue;
+                if (measurement?.Humidity == null) continue;
                 sb.AppendFormat("airgradient_rhum{{id=\"{0}\"}}{1}", measurement.DeviceId, measurement.Humidity).AppendLine();
             }
 
