@@ -45,15 +45,39 @@ metadata:
 data:
   prometheus.rules: |-
     groups:
-    - name: High Pod Memory Alert
+    - name: High CPU Usage Alert
       rules:
-      - alert: High Pod Memory
-        expr: sum(container_memory_usage_bytes) > 1
+      - alert: High CPU Usage
+        expr: '(avg(node_load1) /  count(count(node_cpu_seconds_total) by (cpu)) * 100) > 75'
         for: 5m
         labels:
           severity: slack
         annotations:
-          summary: High Memory Usage
+          summary: 'High CPU Usage'
+          description: '{{ $labels.instance }} of job {{ $labels.job }} has had high CPU usage for more than 5 minutes.'
+
+    - name: High Node Memory Alert
+      rules:
+      - alert: High Node Memory
+        expr: '(100 - ((node_memory_MemAvailable_bytes * 100) / node_memory_MemTotal_bytes)) > 75'
+        for: 5m
+        labels:
+          severity: slack
+        annotations:
+          summary: 'High Node Memory Usage'
+          description: '{{ $labels.instance }} of job {{ $labels.job }} has had high memory usage for more than 5 minutes.'
+
+    - name: High CO2 Alert
+      rules:
+      - alert: High CO2
+        expr: airgradient_rco2 > 1500
+        for: 5m
+        labels:
+          severity: slack
+        annotations:
+          summary: 'High CO2 at sensor {{ $labels.id }}'
+          description: 'Sensor {{ $labels.id }} has detected high CO2 for more than 5 minutes.'
+
   prometheus.yml: |-
     global:
       scrape_interval: 1m

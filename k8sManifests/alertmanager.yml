@@ -186,8 +186,10 @@ metadata:
 data:
   config.yml: |-
     global:
+
     templates:
     - '/etc/alertmanager/*.tmpl'
+
     route:
       receiver: gmail-notifications
       group_by: ['alertname', 'priority']
@@ -199,6 +201,7 @@ data:
             severity: slack
           group_wait: 10s
           repeat_interval: 10m
+
     receivers:
     - name: gmail-notifications
       email_configs:
@@ -213,6 +216,9 @@ data:
       slack_configs:
       - api_url: '$SLACK_API_URL'
         channel: '#scott-home-automation'
+        title: "{{ range .Alerts }}{{ .Annotations.summary }}\n{{ end }}"
+        title_link: "http://192.168.1.7:31000/#/alerts?receiver=slack-notifications"
+        text: "{{ range .Alerts }}{{ .Annotations.description }}\n{{ end }}"
         send_resolved: true
 
 ---
