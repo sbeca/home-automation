@@ -1,4 +1,19 @@
 ---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: prometheus-storage-pvc
+  labels:
+    vol: prometheus-storage
+  namespace: monitoring
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+
+---
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
@@ -246,7 +261,8 @@ spec:
             defaultMode: 420
             name: prometheus-server-conf
         - name: prometheus-storage-volume
-          emptyDir: {}
+          persistentVolumeClaim:
+            claimName: prometheus-storage-pvc
 
 ---
 kind: Service
