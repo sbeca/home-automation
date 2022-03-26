@@ -1,0 +1,7 @@
+{
+    "omnisharp.useGlobalMono": "never",
+    "editor.formatOnPaste": true,
+    "editor.formatOnSave": true,
+    "html.format.endWithNewline": true,
+    "files.insertFinalNewline": true
+}
