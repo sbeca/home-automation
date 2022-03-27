@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.EntityFrameworkCore;
 using MonitoringServer.Data;
+using MonitoringServer.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,6 +14,12 @@ builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true)
     .AddEntityFrameworkStores<ApplicationDbContext>();
 builder.Services.AddRazorPages();
+
+builder.Services.AddTransient<IEmailSender, EmailSender>();
+
+builder.Services.Configure<DataProtectionTokenProviderOptions>(options =>
+    options.TokenLifespan = TimeSpan.FromHours(3)
+);
 
 builder.Services.Configure<IdentityOptions>(options =>
 {
